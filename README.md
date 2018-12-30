@@ -6,7 +6,7 @@ type Market @model @searchable {
   name: String!
   products: [Product]
     @connection(name: "MarketProducts", sortField: "createdAt")
-  tags: [String!]
+  tags: [String]
   owner: String!
   createdAt: String
 }
@@ -30,8 +30,8 @@ type S3Object {
 
 type User
   @model(
-    mutations: { create: "registerUser", update: "updateUser" }
     queries: { get: "getUser" }
+    mutations: { create: "registerUser", update: "updateUser" }
     subscriptions: null
   ) {
   id: ID!
@@ -43,8 +43,8 @@ type User
 
 type Order
   @model(
-    mutations: { create: "createOrder" }
     queries: null
+    mutations: { create: "createOrder" }
     subscriptions: null
   ) {
   id: ID!
@@ -69,6 +69,7 @@ type ShippingAddress {
 var express = require("express");
 var bodyParser = require("body-parser");
 var awsServerlessExpressMiddleware = require("aws-serverless-express/middleware");
+require("dotenv").config();
 var stripe = require("stripe")("***");
 var AWS = require("aws-sdk");
 
@@ -80,9 +81,6 @@ const config = {
 };
 
 var ses = new AWS.SES(config);
-
-/* Moving out of AWS SES Sandbox */
-// https://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html
 
 // declare a new express app
 var app = express();
@@ -100,8 +98,8 @@ app.use(function(req, res, next) {
 });
 
 const chargeHandler = async (req, res, next) => {
-  const { token, shipped } = req.body;
-  const { amount, currency, description } = req.body.charge;
+  const { token } = req.body;
+  const { currency, amount, description } = req.body.charge;
 
   try {
     const charge = await stripe.charges.create({
@@ -111,9 +109,8 @@ const chargeHandler = async (req, res, next) => {
       description
     });
     if (charge.status === "succeeded") {
-      req.description = description;
       req.charge = charge;
-      req.shipped = shipped;
+      req.description = description;
       req.email = req.body.email;
       next();
     }
@@ -122,14 +119,13 @@ const chargeHandler = async (req, res, next) => {
   }
 };
 
-const convertCentsToDollars = amount => (amount / 100).toFixed(2);
+const convertCentsToDollars = price => (price / 100).toFixed(2);
 
 const emailHandler = (req, res) => {
   const {
-    shipped,
     charge,
     description,
-    email: { customerEmail, ownerEmail }
+    email: { shipped, customerEmail, ownerEmail }
   } = req;
 
   ses.sendEmail(
@@ -137,6 +133,7 @@ const emailHandler = (req, res) => {
       Source: config.adminEmail,
       ReturnPath: config.adminEmail,
       Destination: {
+      /* add customerEmail and ownerEmail to ToAddresses array after you've moved out of the sandbox for SES */ 
         ToAddresses: [config.adminEmail]
       },
       Message: {
@@ -146,34 +143,35 @@ const emailHandler = (req, res) => {
         Body: {
           Html: {
             Charset: "UTF-8",
-            Data: `<h3>Order Processed!</h3>
-               <p><span style="font-weight: bold">${description}</span> - $${convertCentsToDollars(
+            Data: `
+            <h3>Order Processed!</h3>
+            <p><span style="font-weight: bold">${description}</span> - $${convertCentsToDollars(
               charge.amount
             )}</p>
-               <p>Customer Mail: <a href="mailto:${customerEmail}">${customerEmail}</a></p>
-               <p>Contact your seller at <a href="mailto:${ownerEmail}">${ownerEmail}</a></p>
-               ${
-                 shipped
-                   ? `
-                   <h4>Mailing Address</h4>
-                   <p>
-                      ${charge.source.name}
-                    </p>
-                    <p>${charge.source.address_line1}</p>
-                    <p>
-                      ${charge.source.address_city},
-                     ${charge.source.address_state} 
-                      ${charge.source.address_zip}
-                    </p>
-                  `
-                   : `No shipping address provided`
-               }
-               <p style="font-style: italic; color: grey">${
-                 shipped
-                   ? "Your product will be shipped in 2-3 days"
-                   : "Check your verified email for your emailed product"
-               }</p>
+
+            <p>Customer Email: <a href="mailto:${customerEmail}">${customerEmail}</a></p>
+            <p>Contact your seller: <a href="mailto:${ownerEmail}">${ownerEmail}</a></p>
+
+            ${
+              shipped
+                ? `<h4>Mailing Address</h4>
+              <p>${charge.source.name}</p>
+              <p>${charge.source.address_line1}</p>
+              <p>${charge.source.address_city}, ${
+                    charge.source.address_state
+                  } ${charge.source.address_zip}</p>
               `
+                : "Emailed product"
+            }
+
+            <p style="font-style: italic; color: grey;">
+              ${
+                shipped
+                  ? "Your product will be shipped in 2-3 days"
+                  : "Check your verified email for your emailed product"
+              }
+            </p>
+            `
           }
         }
       }
@@ -184,8 +182,8 @@ const emailHandler = (req, res) => {
       }
       res.json({
         message: "Order processed successfully!",
-        data,
-        charge
+        charge,
+        data
       });
     }
   );
@@ -197,5 +195,8 @@ app.listen(3000, function() {
   console.log("App started");
 });
 
+// Export the app object. When executing the application local this does nothing. However,
+// to port it to AWS Lambda we will create a wrapper around that will load the app from
+// this file
 module.exports = app;
 ```
