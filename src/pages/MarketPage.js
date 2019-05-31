@@ -5,7 +5,7 @@ class MarketPage extends React.Component {
   state = {};
 
   render() {
-    return <div>MarketPage</div>;
+    return <div>MarketPage {this.props.marketId} </div>;
   }
 }
 
