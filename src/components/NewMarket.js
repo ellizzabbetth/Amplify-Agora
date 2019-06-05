@@ -18,7 +18,10 @@ class NewMarket extends React.Component {
   handleAddMarket = async (user) => {
     console.log(this.state.name);
     try {
-      this.setState({ addMarketDialog: false })
+      // false hides dialong
+      this.setState({ addMarketDialog: false });
+
+      // provide arguments to create market mutations
       const input = {
          name: this.state.name,
          tags: this.state.selectedTags,
@@ -29,13 +32,13 @@ class NewMarket extends React.Component {
       )
       console.log({ result });
       console.info(`Created market: id ${result.data.createMarket.id}`)
-      this.setState({ name: "", selectedTage: []})
+      this.setState({ name: "", selectedTags: []})
     } catch(err){
       console.error('Error adding new market ', err);
       Notification.error({
         title: "Error",
         message: `${err.message || "Error adding market"}`
-      })
+      });
     }
 
   };
@@ -43,7 +46,7 @@ class NewMarket extends React.Component {
    handleFilterTags = query => {
      const options = this.state.tags
      .map(tag => ({ value: tag, label: tag }))
-     .filter(tag => tag.label.toLowerCase().includes(query.toLowerCase()))
+     .filter(tag => tag.label.toLowerCase().includes(query.toLowerCase()));
      this.setState({ options })
    }
   
@@ -51,7 +54,9 @@ class NewMarket extends React.Component {
     return (
       <UserContext.Consumer>
 
-
+      {/* render prop pattern - {} and function that returns all of our markup
+          and gives us access to all of our data
+      */}
       {({ user }) => <>
         <div className="market-header">
           <h1 className="market-title">

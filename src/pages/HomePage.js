@@ -10,7 +10,7 @@ class HomePage extends React.Component {
       <>
         <NewMarket/>
 
-        <MarketList/>
+        <MarketList/> 
       </>
     )
   }

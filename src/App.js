@@ -24,8 +24,7 @@ class App extends React.Component {
 
   getUserData = async () => {
     const user  = await Auth.currentAuthenticatedUser()
-    user ? this.setState({ user }) : 
-    this.setState({ user: null})
+    user ? this.setState({ user }) :   this.setState({ user: null})
   }
 
 
@@ -36,18 +35,19 @@ class App extends React.Component {
         this.getUserData()
         break;
       case "signUp":
-        console.log('signedup');
+        console.log('signed up');
         break;
       case "signOut":
         console.log('signed out')
-        this.setState({ user: null })
+        this.setState({ user: null });
         break;
       default:
         return;
     }
   }
   
-  handleSignOut = async () => {
+  // handleSignout
+  handleSignout = async () => {
     try {
       await Auth.signOut()
     } catch(err) {
@@ -65,7 +65,7 @@ class App extends React.Component {
       <Router>
           <>
              { /* Navbar */ }
-             <Navbar user={user} handleSignOut={this.signOut} />
+             <Navbar user={user} handleSignout={this.signOut} />
 
              {/* Routes - Emmet tab*/ }
              <div className="app-container">
