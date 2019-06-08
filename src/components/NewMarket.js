@@ -27,11 +27,13 @@ class NewMarket extends React.Component {
          tags: this.state.selectedTags,
          owner: user.username
       };
+      // run mutation
       const result = await API.graphql(
         graphqlOperation(createMarket, { input })
       )
       console.log({ result });
       console.info(`Created market: id ${result.data.createMarket.id}`)
+      // 
       this.setState({ name: "", selectedTags: []})
     } catch(err){
       console.error('Error adding new market ', err);
@@ -57,7 +59,11 @@ class NewMarket extends React.Component {
       {/* render prop pattern - {} and function that returns all of our markup
           and gives us access to all of our data
       */}
-      {({ user }) => <>
+      { 
+        // provides a closure that can access the data that we're passing
+        // down with the help of our consumer. Access value by destructuring 
+        // value and get user property on the object property
+        ({ user }) => <>
         <div className="market-header">
           <h1 className="market-title">
             Create Your MarketPlace
@@ -68,6 +74,30 @@ class NewMarket extends React.Component {
               onClick={() => this.setState({ addMarketDialog: true})}
             />
             </h1>
+
+            <Form inline = {true} onSubmit = { this.props.handleSearch }>
+              <Form.Item>
+                <Input
+                  placeholder = "Search Markets ...."
+                  value ={this.props.searchTerm}
+                  icon = "circle-cross"
+                  onIconClick= {this.props.handleClearSearch}
+                  onChange = {this.props.handleSearchChange}
+                />
+              </Form.Item>
+              <Form.Item>
+                <Button
+                  type="info"
+                  //placeholder = "Search Markets ...."
+                  icon = "search"
+                  onClick={this.props.handleSearch}
+                  loading ={this.props.isSearching}
+                  >
+                  Search
+                </Button>
+              </Form.Item>
+            </Form>
+            </div>
           <Dialog
             title="Create New Market"
             visible={this.state.addMarketDialog}
@@ -126,8 +156,10 @@ class NewMarket extends React.Component {
           </Dialog>
           
           
-        </div>
-      </>}
+        
+      </>
+     }
+      {/* close closure */}
       </UserContext.Consumer>
     )
   }

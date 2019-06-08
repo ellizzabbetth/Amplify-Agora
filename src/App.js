@@ -61,6 +61,8 @@ class App extends React.Component {
     return !user ? (
       <Authenticator theme = {theme} />
     ) : (
+      // Provider allows us to provide some data to 
+      // our child components 
       <UserContext.Provider value={{ user }}>
       <Router>
           <>
