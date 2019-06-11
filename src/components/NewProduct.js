@@ -124,7 +124,7 @@ class NewProduct extends React.Component {
                 </Radio>
                  <Radio
                   value ="false"
-                  checked={shipped === true}
+                  checked={shipped === false}
                   onChange={() => this.setState({ shipped: false})}
                 >
                 Emailed
