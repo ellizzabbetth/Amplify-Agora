@@ -86,7 +86,7 @@ class MarketPage extends React.Component {
          name="1"
          >
 
-         <NewProduct />
+         <NewProduct marketId={this.props.marketId} />
 
          </Tabs.Pane>
        )}
