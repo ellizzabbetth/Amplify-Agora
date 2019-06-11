@@ -14,7 +14,8 @@ const initialState= {
   shipped: false,
   imagePreview: "",
   image: "",
-  isUploading: false /* track when things are being uploaded */
+  isUploading: false, /* track when things are being uploaded */
+  percentUploaded: 0
 };
 
 class NewProduct extends React.Component {
@@ -46,7 +47,12 @@ class NewProduct extends React.Component {
       // 
       const uploadedFile = await Storage.put(filename, this.state.image.file, { 
         /* specify file type*/
-        contentType: this.state.image.type
+        contentType: this.state.image.type,
+        progressCallback: progress => {
+          console.log(`Uploaded: ${progress.loaded}/${progress.total}`);
+          const percentUploaded = Math.round((progress.loaded/progress.total) * 100);
+          this.setState({ percentUploaded });
+        }
       })
       // Once we have uploaded the image we want to put a reference to 
       // that image in our database. Use AppSync to do this.
@@ -84,7 +90,14 @@ class NewProduct extends React.Component {
   };
 
   render() {
-    const { description, price, image, shipped, imagePreview, isUploading } = this.state;
+    const { percentUploaded, 
+      description, 
+      price, 
+      image, 
+      shipped, 
+      imagePreview, 
+      isUploading 
+    } = this.state;
     
     return (
       <div className="flex-center">
@@ -139,6 +152,14 @@ class NewProduct extends React.Component {
                 alt= "Product Preview"
                 />
 
+              )}
+              {percentUploaded > 0 && (
+                <Progress 
+                type= "circle"
+                className="progress"
+                status="success"
+                percentage={percentUploaded}
+                />
               )}
               <PhotoPicker 
                 title="Product Image"
