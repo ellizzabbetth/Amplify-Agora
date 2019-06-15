@@ -1,6 +1,7 @@
 import React from "react";
 import { API, graphqlOperation } from 'aws-amplify';
 // import { getMarket } from '../graphql/queries';
+import { onCreateProduct, onUpdateProduct, onDeleteProduct } from '../graphql/subscriptions';
 import { Loading, Tabs, Icon } from "element-react";
 import { Link } from 'react-router-dom';
 import NewProduct from '../components/NewProduct';
@@ -41,8 +42,87 @@ class MarketPage extends React.Component {
 
   componentDidMount() {
     this.handleGetMarket();
+    // onCreateProduct Subscription
+    // setup Subscriptions -- setup reference on this so that we can unmount later if needed
+    this.createProductListner = API.graphql(graphqlOperation(onCreateProduct))
+    .subscribe({
+      next: productData => {  
+
+        // when a new product is created
+        const createProduct = productData.value.data.onCreateProduct;
+        // separate createdProduct from all the previous Products.
+        // Iterate over previous products to make sure that none have the
+        // same id as the newly created Product id
+        const prevProducts = this.state.market.products.items.filter(
+          item => item.id !== createProduct.id
+        )
+        // createdProduct is the first element in new array
+        const updatedProducts = [createProduct, ...prevProducts]
+        // shallow clone of market
+        const market = { ...this.state.market };
+        // 
+        market.products.items = updatedProducts;
+        // set state with updated market
+        this.setState({ market });
+      }
+    })
+
+    // update product listener by executing onUpdateProduct subscription
+    this.updateProductListener = API.graphql(graphqlOperation(onUpdateProduct))
+    .subscribe({
+      // get productData when ever a product is updated
+      next: productData => {
+        const updatedProduct = productData.value.data.onUpdateProduct
+        // find index of updated product
+        const updatedProductIndex = this.state.market.products.items.findIndex(
+          item => item.id === updatedProduct.id
+        )    
+      const updatedProducts = [
+        // spread in products to get all of the array before the updated product
+        // slice in 0th index into updatedProductIndex
+        ...this.state.market.products.items.slice(0, updatedProductIndex),
+        updatedProduct,
+        // spread in the rest of the array
+        ...this.state.market.products.items.slice(updatedProductIndex + 1)
+      ]
+       // shallow clone of market
+       const market = { ...this.state.market };
+       // update items property with updateProducts array
+       market.products.items = updatedProducts;
+       // set state with updated market
+       this.setState({ market });
+    }
+    })
+    // delete product subscription
+    this.deleteProductListner = API.graphql(graphqlOperation(onDeleteProduct))
+    .subscribe({
+      next: productData => {  
+        // when a new product is created
+        const deletedProduct = productData.value.data.onDeleteProduct;
+        // separate createdProduct from all the previous Products.
+        // Iterate over previous products to make sure that none have the
+        // same id as the newly created Product id
+        const deletedProducts = this.state.market.products.items.filter(
+          item => item.id !== deletedProduct.id
+        )
+        // createdProduct is the first element in new array
+        // const updatedProducts = [createProduct, ...prevProducts]
+        // shallow clone of market
+        const market = { ...this.state.market };
+        // 
+        market.products.items = deletedProducts;
+        // set state with updated market
+        this.setState({ market });
+      }
+    })
   }
  
+   componentWillUnmount() {
+     this.createProductListener.unsubscribe();
+     this.updateProductListener.unssubscribe();
+     this.deleteProductListener.unsubscribe();
+   }
+
   // make a query for each market based on marketid
   handleGetMarket = async () => {
     // get market according to id
