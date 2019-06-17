@@ -41,10 +41,11 @@ class MarketPage extends React.Component {
   };
 
   componentDidMount() {
+    console.log('component did moutn');
     this.handleGetMarket();
     // onCreateProduct Subscription
     // setup Subscriptions -- setup reference on this so that we can unmount later if needed
-    this.createProductListner = API.graphql(graphqlOperation(onCreateProduct))
+    this.createProductListener = API.graphql(graphqlOperation(onCreateProduct))
     .subscribe({
       next: productData => {  
 
@@ -94,7 +95,7 @@ class MarketPage extends React.Component {
     }
     })
     // delete product subscription
-    this.deleteProductListner = API.graphql(graphqlOperation(onDeleteProduct))
+    this.deleteProductListener = API.graphql(graphqlOperation(onDeleteProduct))
     .subscribe({
       next: productData => {  
         // when a new product is created
@@ -119,7 +120,7 @@ class MarketPage extends React.Component {
  
    componentWillUnmount() {
      this.createProductListener.unsubscribe();
-     this.updateProductListener.unssubscribe();
+     this.updateProductListener.unsubscribe();
      this.deleteProductListener.unsubscribe();
    }
 
@@ -129,13 +130,14 @@ class MarketPage extends React.Component {
     const input = {
       id: this.props.marketId
     }
+    // console.log(this.props.marketId);
     const result = await API.graphql(graphqlOperation(getMarket, input ))
-    console.log(result);
+    console.log('result -- handleGetMarket', result);
 
     // use callback to setState to check marketowner
-    this.setState({ market: result.data.getMarket, isLoading: false}, () => {
-      this.checkMarketOwner() 
-    });
+    this.setState({ market: result.data.getMarket, isLoading: false}, 
+      () => {this.checkMarketOwner()}
+      );
     
   };
 
@@ -209,7 +211,7 @@ class MarketPage extends React.Component {
           {/* Pane name is 2 */}
 
           {/* map over products*/}
-          <div className="product-List">
+          <div className="product-list">
             {market.products.items.map(product => (
               <Product key={product.id} product={product}/>
             ))} 

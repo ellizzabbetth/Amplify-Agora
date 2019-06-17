@@ -45,7 +45,7 @@ class Product extends React.Component {
         type: "success",
         duration: 2000
       })
-      setTimeout(() => window.location.reload(), 2000);
+   //   setTimeout(() => window.location.reload(), 2000);
     } catch(err){
       console.error(`Failed to update product with id: ${productId}`, err)
       Notification.error(err);
@@ -68,7 +68,7 @@ class Product extends React.Component {
         duration: 2000
       });
 
-      setTimeout(() => window.location.reload(), 2000);
+    //  setTimeout(() => window.location.reload(), 2000);
     } catch (err) {
       console.error(`Failed to delete product with id ${productId}`, err);
       Notification.error(err);
@@ -79,11 +79,7 @@ class Product extends React.Component {
   render() {
     const { deleteProductDialog, description, price, shipped, updateProductDialog } = this.state;
     const { product } = this.props;
-    console.log('product', product);
-
-   
-
-
+     
     return (
       <UserContext.Consumer>
        {({ user }) => {
@@ -114,7 +110,7 @@ class Product extends React.Component {
                   ${convertCentsToDollar(product.price)}
                 </span>
                 {!isProductOwner && (
-                  <PayButton />
+                  <PayButton product = {product} user={user}/>
                 )}
               </div>
             </div>
@@ -187,7 +183,7 @@ class Product extends React.Component {
                   <Dialog.Body>
                     <Form labelPosition= "top">
                     <Form.Item label="Update Description">
-            {/* description text is set in state */}
+              {/* description text is set in state */}
               <Input
             
                 icon="information"

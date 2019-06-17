@@ -8,16 +8,21 @@ import MarketPage from './pages/MarketPage';
 import Navbar from './components/Navbar';
 
 import "./App.css";
+
 /* */
 export const UserContext = React.createContext()
 
 
 class App extends React.Component {
+
+  _isMounted = false;
+
   state = {
     user: null
   };
   
   componentDidMount() {
+    this._isMounted = true;
     this.getUserData();
     Hub.listen('auth', this, 'onHubCapsule')
   }
@@ -27,6 +32,9 @@ class App extends React.Component {
     user ? this.setState({ user }) :   this.setState({ user: null})
   }
 
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
 
   onHubCapsule = capsule => {
     switch(capsule.payload.event) {
@@ -48,6 +56,7 @@ class App extends React.Component {
   
   // handleSignout
   handleSignout = async () => {
+
     try {
       await Auth.signOut()
     } catch(err) {
@@ -57,9 +66,9 @@ class App extends React.Component {
 
   render() {
     const { user } = this.state;
-
+    console.log(user);
     return !user ? (
-      <Authenticator theme = {theme} />
+      <Authenticator theme={theme} />
     ) : (
       // Provider allows us to provide some data to 
       // our child components 
@@ -67,15 +76,17 @@ class App extends React.Component {
       <Router>
           <>
              { /* Navbar */ }
-             <Navbar user={user} handleSignout={this.signOut} />
+             <Navbar user={user} handleSignout={this.handleSignout} />
 
              {/* Routes - Emmet tab*/ }
              <div className="app-container">
               <Route exact path="/" component={HomePage}></Route>
               <Route path="/profile/" component={ProfilePage} />
               <Route path="/markets/:marketId" component={
-                ( {match} ) => 
-                <MarketPage user= {user} marketId ={match.params.marketId }/>} />
+                ( {match} ) => (
+                  <MarketPage user={user} marketId={match.params.marketId }/>
+                )} 
+              />
              
              </div>
           </>
