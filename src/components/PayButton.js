@@ -7,7 +7,7 @@ import { API } from "aws-amplify";
 
 const stripeConfig = {
   currency: "USD",
-  publishableAPIKey: process.env.REACT_APP_publishableAPIKey
+  publishableAPIKey: 'pk_test_aLpu1kat022o2AI0qwEzxJFM00ZakYfMFS' // process.env.REACT_APP_publishableAPIKey
 }
 
 const PayButton = ({ product, user }) => {
@@ -16,7 +16,12 @@ const PayButton = ({ product, user }) => {
     try{
       const result = await API.post('orderlambda', '/charge',{
         body: {
-          token
+          token,
+          charge: {
+            currency: stripeConfig.currency,
+            amount: product.price,
+            description: product.description
+          }
         }
       })
       console.log({result});
